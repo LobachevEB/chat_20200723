@@ -1,6 +1,7 @@
 package client;
 
 
+import com.google.gson.Gson;
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
@@ -19,11 +20,11 @@ import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.stage.WindowEvent;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.IOException;
+import java.io.*;
 import java.net.Socket;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.ResourceBundle;
 
 public class Controller implements Initializable {
@@ -57,6 +58,10 @@ public class Controller implements Initializable {
     private Stage stage;
     private Stage regStage;
     RegController regController;
+    private FileOutputStream historyFile = null;
+    private java.io.BufferedReader bufferedReader = null;
+    private final int HISTORY_LEN = 100;
+
 
     public void setAuthenticated(boolean authenticated) {
         this.authenticated = authenticated;
@@ -71,6 +76,41 @@ public class Controller implements Initializable {
         }
         setTitle(nick);
         textArea.clear();
+        if(nick.length() > 0) {
+            try (FileInputStream fileInputStream = new FileInputStream(nick + ".txt")) {
+                InputStreamReader inputStreamReader = new InputStreamReader(fileInputStream);
+                bufferedReader = new BufferedReader(inputStreamReader);
+                List<String> history = new ArrayList<String>();
+                String histLine = null;
+                while ((histLine = bufferedReader.readLine()) != null) {
+                    history.add(histLine);
+                }
+                int l = history.size();
+                int start = 0;
+                if (l > 0) {
+                    if (l > HISTORY_LEN) {
+                        start = l - HISTORY_LEN;
+                    }
+                    for (int i = start; i < l; i++) {
+                        textArea.appendText(history.get(i)+"\n");
+                    }
+                }
+            } catch (FileNotFoundException e) {
+                e.printStackTrace();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            catch (NullPointerException e){
+                e.printStackTrace();
+            }
+        }
+        try {
+            if(nick.length() > 0) {
+                historyFile = new FileOutputStream(nick + ".txt",true);
+            }
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
     }
 
     @Override
@@ -84,6 +124,13 @@ public class Controller implements Initializable {
                     if (socket != null && !socket.isClosed()) {
                         try {
                             out.writeUTF("/end");
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                    if(historyFile != null){
+                        try {
+                            historyFile.close();
                         } catch (IOException e) {
                             e.printStackTrace();
                         }
@@ -160,6 +207,9 @@ public class Controller implements Initializable {
 
                         } else {
                             textArea.appendText(str + "\n");
+                            if(historyFile != null){
+                                historyFile.write((str + "\n").getBytes());
+                            }
                         }
                     }
                 }catch (RuntimeException e)   {

@@ -48,7 +48,7 @@ public class ClientHandler {
                                     socket.setSoTimeout(0);
 
                                     //==============//
-                                    sendMsg(SQLHandler.getMessageForNick(nick));
+                                    //sendMsg(SQLHandler.getMessageForNick(nick));
                                     //==============//
 
                                     break;
