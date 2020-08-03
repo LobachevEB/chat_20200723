@@ -5,6 +5,7 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
 import java.net.SocketTimeoutException;
+import java.util.logging.Level;
 
 public class ClientHandler {
     Server server;
@@ -44,7 +45,8 @@ public class ClientHandler {
                                     sendMsg("/authok " + newNick);
                                     nick = newNick;
                                     server.subscribe(this);
-                                    System.out.printf("Клиент %s подключился \n", nick);
+                                    //System.out.printf("Клиент %s подключился \n", nick);
+                                    Server.logger.log(Level.INFO,String.format("Клиент %s подключился \n", nick));
                                     socket.setSoTimeout(0);
 
                                     //==============//

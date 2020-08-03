@@ -5,8 +5,12 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.List;
 import java.util.Vector;
+import java.util.logging.*;
 
 public class Server {
+    public static final Logger logger = Logger.getLogger(Server.class.getName());
+    Handler consoleHandler = new ConsoleHandler();
+
     private List<ClientHandler> clients;
     private AuthService authService;
 
@@ -15,10 +19,15 @@ public class Server {
     }
 
     public Server() {
+        logger.setLevel(Level.INFO);
+        consoleHandler.setLevel(Level.INFO);
+        logger.addHandler(consoleHandler);
+        logger.setUseParentHandlers(false);
         clients = new Vector<>();
 //        authService = new SimpleAuthService();
         //==============//
         if (!SQLHandler.connect()) {
+            logger.log(Level.SEVERE,"Не удалось подключиться к БД");
             throw new RuntimeException("Не удалось подключиться к БД");
         }
         authService = new DBAuthServise();
@@ -31,13 +40,17 @@ public class Server {
 
         try {
             server = new ServerSocket(PORT);
-            System.out.println("Сервер запущен!");
+            logger.log(Level.INFO,"Сервер запущен!");
+            //System.out.println("Сервер запущен!");
 
             while (true) {
                 socket = server.accept();
-                System.out.println("Клиент подключился");
-                System.out.println("socket.getRemoteSocketAddress(): " + socket.getRemoteSocketAddress());
-                System.out.println("socket.getLocalSocketAddress() " + socket.getLocalSocketAddress());
+//                System.out.println("Клиент подключился");
+//                System.out.println("socket.getRemoteSocketAddress(): " + socket.getRemoteSocketAddress());
+//                System.out.println("socket.getLocalSocketAddress() " + socket.getLocalSocketAddress());
+                logger.log(Level.INFO,"Клиент подключился");
+                logger.log(Level.INFO,"socket.getRemoteSocketAddress(): " + socket.getRemoteSocketAddress());
+                logger.log(Level.INFO,"socket.getLocalSocketAddress() " + socket.getLocalSocketAddress());
                 new ClientHandler(this, socket);
             }
         } catch (IOException e) {
@@ -82,6 +95,7 @@ public class Server {
             }
         }
         sender.sendMsg(String.format("Client %s not found", receiver));
+        logger.log(Level.WARNING,String.format("Client %s not found", receiver));
     }
 
 
